@@ -66,6 +66,7 @@ class ODE(object):
                  "iid"       : "HiRISE",
                  "ihid"      : "MRO",
                  "productid" : productid}
+
         # Query the ODE
         products = query_ode(self.ode_url, query)
         # Validate query results with conditions for this particular query
@@ -85,7 +86,7 @@ def url_https(url):
 
 
 def query_ode(ode_url, query):
-    with closing(requests.request("GET", ode_url, params=query)) as r:
+    with closing(requests.get(ode_url, params=query)) as r:
         if r.ok:
             response = r.json()
             products_check = response['ODEResults']['Products']

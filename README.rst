@@ -12,6 +12,14 @@ Installation
 Eventually this will be in pypi, but for now just clone and run ``python setup.py install``.
 Moody will show up in your path as an executable.
 
+Chat
+----
+
+There is a moody specific gitter room, but the maintainers also hang out in the `open planetary slack <https://openplanetary.slack.com/>`_
+
+image:: https://badges.gitter.im/Join%20Chat.svg
+   :target: https://gitter.im/AndrewAnnex/moody?utm_source=badge
+
 Usage
 -----
 
