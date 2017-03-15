@@ -17,8 +17,10 @@ Chat
 
 There is a moody specific gitter room, but the maintainers also hang out in the `open planetary slack <https://openplanetary.slack.com/>`_
 
-image:: https://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/AndrewAnnex/moody?utm_source=badge
+|Gitter|
+
+.. |Gitter| image:: https://badges.gitter.im/AndrewAnnex/moody.svg
+   :target: https://gitter.im/AndrewAnnex/moody?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
 
 Usage
 -----
