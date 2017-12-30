@@ -8,7 +8,7 @@ from contextlib import closing
 class ODE(object):
     """ class to hold ode downloading commands """
 
-    def __init__(self, https=True):
+    def __init__(self, https=True, debug=False):
         self.https   = https
         if https:
             self.ode_url = "https://oderest.rsl.wustl.edu/live2"
@@ -80,9 +80,86 @@ class ODE(object):
             for product in products:
                 download_edr_img_files(product, self.https, chunk_size)
 
+    def get_meta(self, **kwargs):
+        """
+        Perform a mostly arbitrary meta_data query and dump to std out
+        :param kwargs:
+        :return:
+        """
+        query = kwargs
+        # filters
+        query = query_params(query, 'productid', None, short_hand='pid')
+        query = query_params(query, 'query', 'product')
+        query = query_params(query, 'results', 'm')
+        query = query_params(query, 'output', 'j')
+        return query_ode(self.ode_url, query=query)
+
+    def get_meta_by_key(self, key, **kwargs):
+        res = self.get_meta(**kwargs)
+        return res[key]
+
+    def get_ctx_meta(self, pid):
+        productid = "{}*".format(pid)
+
+        query = {"target"   : "mars",
+                 "query"    : "product",
+                 "results"  : "m",
+                 "output"   : "j",
+                 "pt"       : "EDR",
+                 "iid"      : "CTX",
+                 "ihid"     : "MRO",
+                 "productid": productid}
+
+        return query_ode(self.ode_url, query=query)
+
+    def get_ctx_meta_by_key(self, pid, key):
+        res = self.get_ctx_meta(pid)
+        return res[key]
+
+    def get_hirise_meta(self, pid):
+        productid = "{}*".format(pid)
+
+        query = {"target"   : "mars",
+                 "query"    : "product",
+                 "results"  : "m",
+                 "output"   : "j",
+                 "pt"       : "RDRV11",
+                 "iid"      : "HiRISE",
+                 "ihid"     : "MRO",
+                 "productid": productid}
+
+        return query_ode(self.ode_url, query=query)
+
+    def get_hirise_meta_by_key(self, pid, key):
+        res = self.get_hirise_meta(pid)
+        return res[key]
+
 
 def url_https(url):
     return url.replace("http://", "https://")
+
+
+def query_params(self, params, key, def_value, short_hand=None):
+    """
+    updates params dict to use
+    :param params:
+    :param key:
+    :param def_value:
+    :param short_hand:
+    :return:
+    """
+    if key not in params and short_hand:
+        # value is associated with shorthand, move to key
+        params[key] = params.get(short_hand, def_value)
+        del params[short_hand]
+    elif key not in params and not short_hand:
+        params[key] = def_value
+    elif key in params:
+        # key is there, also possibly shorthand
+        # assume def value at this point is not needed
+        if short_hand in params:
+            del params[short_hand]
+    return params
 
 
 def query_ode(ode_url, query):
