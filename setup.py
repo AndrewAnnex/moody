@@ -3,7 +3,7 @@ import io
 
 # some influences here came from https://github.com/audreyr/cookiecutter/blob/master/setup.py
 
-version = '0.0.1'
+version = '0.0.2'
 
 with io.open('README.rst', 'r', encoding='utf-8') as readme_file:
     readme = readme_file.read()
@@ -19,7 +19,7 @@ setup(
     author='Andrew Annex',
     author_email='annex@jhu.edu',
     url='https://github.com/andrewannex/moody',
-    download_url='https://github.com/AndrewAnnex/moody/archive/0.0.1.tar.gz',
+    download_url='https://github.com/AndrewAnnex/moody/archive/0.0.2.tar.gz',
     install_requires=['requests', 'fire', 'tqdm'],
     entry_points={
         'console_scripts': [
@@ -36,11 +36,7 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Scientific/Engineering :: GIS'
