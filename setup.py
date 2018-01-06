@@ -3,7 +3,7 @@ import io
 
 # some influences here came from https://github.com/audreyr/cookiecutter/blob/master/setup.py
 
-version = '0.0.1dev'
+version = '0.0.1'
 
 with io.open('README.rst', 'r', encoding='utf-8') as readme_file:
     readme = readme_file.read()
@@ -19,7 +19,7 @@ setup(
     author='Andrew Annex',
     author_email='annex@jhu.edu',
     url='https://github.com/andrewannex/moody',
-
+    download_url='https://github.com/AndrewAnnex/moody/archive/0.0.1.tar.gz',
     install_requires=['requests', 'fire', 'tqdm'],
     entry_points={
         'console_scripts': [
