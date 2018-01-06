@@ -1,7 +1,7 @@
 import fire
 import requests
 import sys
-import progressbar
+from tqdm import tqdm
 from contextlib import closing
 
 
@@ -15,7 +15,7 @@ class ODE(object):
         else:
             self.ode_url = "http://oderest.rsl.wustl.edu/live2"
 
-    def ctx_edr(self, pid, chunk_size=1024*10000):
+    def ctx_edr(self, pid, chunk_size=1024*1024):
         """
         Download a CTX EDR .IMG file to the CWD.
 
@@ -42,7 +42,7 @@ class ODE(object):
         else:
             download_edr_img_files(product, self.https, chunk_size)
 
-    def hirise_edr(self, pid, chunk_size=1024*10000):
+    def hirise_edr(self, pid, chunk_size=1024*1024):
         """
         Download a HiRISE EDR set of .IMG files to the CWD
 
@@ -191,10 +191,8 @@ def download_edr_img_files(product, https, chunk_size):
 
 def download_file(url, filename, chunk_size):
     with closing(requests.get(url, stream=True)) as r:
-        bar = progressbar.ProgressBar()
         with open(filename, "wb") as output:
-            print("Downloading {}".format(filename))
-            for chunk in bar(r.iter_content(chunk_size=chunk_size)):
+            for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
 

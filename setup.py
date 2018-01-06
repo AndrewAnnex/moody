@@ -20,7 +20,7 @@ setup(
     author_email='annex@jhu.edu',
     url='https://github.com/andrewannex/moody',
 
-    install_requires=['requests', 'fire', 'progressbar2'],
+    install_requires=['requests', 'fire', 'tqdm'],
     entry_points={
         'console_scripts': [
             'moody = moody.moody:main'
