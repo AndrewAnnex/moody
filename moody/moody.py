@@ -12,8 +12,10 @@ class ODE(object):
         self.https   = https
         if https:
             self.ode_url = "https://oderest.rsl.wustl.edu/live2"
+            self.gds_url = "https://oderest.rsl.wustl.edu/livegds"
         else:
             self.ode_url = "http://oderest.rsl.wustl.edu/live2"
+            self.gds_url = "http://oderest.rsl.wustl.edu/livegds"
 
     def ctx_edr(self, pid, chunk_size=1024*1024):
         """
@@ -79,6 +81,38 @@ class ODE(object):
             # proceed to download
             for product in products:
                 download_edr_img_files(product, self.https, chunk_size)
+
+    def pedr(self, minlon, maxlon, minlat, maxlat):
+        """
+        Get the mola pedr file for the query bounds
+        :param minlon:
+        :param maxlon:
+        :param minlat:
+        :param maxlat:
+        :return:
+        """
+        #todo: convert -180 to 180 to 0 to 360
+        assert 0 <= minlon <= 360
+        assert 0 <= maxlon <= 360
+        assert  minlon < maxlon and minlat < maxlat
+        query = {
+            "query": "molapedr",
+            "result": "v",
+            "output": "J",
+            "minlat": str(minlat),
+            "maxlat": str(maxlat),
+            "westlon": str(minlon),
+            "eastlon": str(maxlon)
+        }
+        # Query the ODE
+        response = query_gds(self.gds_url, query)
+        # get the ResultFile, it seems ResultFile has the same number of contents as Number Files
+        resultfile = response['ResultFiles']['ResultFile']
+        resultfile = list(filter(lambda i: str(i['URL']).endswith('_pts_csv.csv'), resultfile))
+        for f in resultfile:
+            download_file(f['URL'], )
+
+
 
     def get_meta(self, **kwargs):
         """
@@ -160,6 +194,21 @@ def query_params(self, params, key, def_value, short_hand=None):
         if short_hand in params:
             del params[short_hand]
     return params
+
+
+def query_gds(gds_url, query):
+    with closing(requests.get(gds_url, params=query)) as r:
+        if r.ok:
+            response = r.json()
+            products_check = response['GDSResults']
+            if products_check['Status'] != 'Success':
+                print("Error, some issue with the query")
+                sys.exit(1)
+            else:
+                return products_check
+        else:
+            print("Error with query at url: {} with code: {}".format(gds_url, r.status_code))
+            sys.exit(1)
 
 
 def query_ode(ode_url, query):
