@@ -40,6 +40,10 @@ Download all HiRISE EDR IMG files for a particular observation::
 
 Will download all HiRISE EDR images for the ``ESP_028335_1755`` observation to the current working directory.
 
+To download a csv of the MOLA PEDR data for a given 1 degree bounding box (in 0-360 coords)::
+
+    moody pedr 0 0 1 1
+
 Commands
 --------
 A list of comands and usages are listed below and can be found directly from moody using the ``--help`` flag::
