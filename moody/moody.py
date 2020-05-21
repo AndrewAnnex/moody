@@ -117,7 +117,7 @@ class ODE(object):
             **kwargs
         }
         if wkt_footprint:
-            query['footprint'] = wkt_footprint
+            query['footprint'] = f'{wkt_footprint}'
         # Query the ODEq
         response = query_gds(self.gds_url, query)
         # get the ResultFile, it seems ResultFile has the same number of contents as Number Files
@@ -215,13 +215,11 @@ def query_gds(gds_url, query):
             response = r.json()
             products_check = response['GDSResults']
             if products_check['Status'] != 'Success':
-                print("Error, some issue with the query")
-                sys.exit(1)
+                raise RuntimeError(f"Error, some issue with the query: {r.url}", products_check)
             else:
                 return products_check
         else:
-            print("Error with query at url: {} with code: {}".format(gds_url, r.status_code))
-            sys.exit(1)
+            raise RuntimeError("Error with query at url: {} with code: {}".format(gds_url, r.status_code))
 
 
 def query_ode(ode_url, query):
