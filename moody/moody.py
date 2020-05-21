@@ -3,6 +3,9 @@ import requests
 import sys
 from tqdm import tqdm
 from contextlib import closing
+from typing import Optional
+import shutil
+import os
 
 
 class ODE(object):
@@ -82,37 +85,47 @@ class ODE(object):
             for product in products:
                 download_edr_img_files(product, self.https, chunk_size)
 
-    def pedr(self, minlon, maxlon, minlat, maxlat):
+    def pedr(self, minlon: float, minlat: float, maxlon: float, maxlat: float, wkt_footprint: Optional[str] = None, ext: str = 'csv', **kwargs):
         """
-        Get the mola pedr file for the query bounds
-        :param minlon:
-        :param maxlon:
-        :param minlat:
-        :param maxlat:
+        Get the mola pedr csv/shp file for the query bounds
+        :param ext:
+        :param minlon: minimum longitude (western most longitude)
+        :param minlat: minimum latitude  (southern most latitude)
+        :param maxlon: maximum longitude (eastern most longitude)
+        :param maxlat: maximum latitude  (northern most latitude)
+        :param wkt_footprint: Optional WKT footprint to further filter out points
         :return:
         """
-        #todo: convert -180 to 180 to 0 to 360
+        if minlon < 0 or maxlon < 0:
+            # convert -180 to 180 to 0 to 360
+            minlon += 180.0
+            maxlon += 180.0
         assert 0 <= minlon <= 360
         assert 0 <= maxlon <= 360
-        assert  minlon < maxlon and minlat < maxlat
+        assert minlon < maxlon and minlat < maxlat
+        # default is csv
+        rt = 's' if ext == 'shp' else 'v'
         query = {
             "query": "molapedr",
-            "result": "v",
+            "results": rt,
             "output": "J",
-            "minlat": str(minlat),
+            "minlat": minlat,
             "maxlat": str(maxlat),
-            "westlon": str(minlon),
-            "eastlon": str(maxlon)
+            "westernlon": str(minlon),
+            "easternlon": str(maxlon),
+            "zipclean": 't',
+            **kwargs
         }
-        # Query the ODE
+        if wkt_footprint:
+            query['footprint'] = wkt_footprint
+        # Query the ODEq
         response = query_gds(self.gds_url, query)
         # get the ResultFile, it seems ResultFile has the same number of contents as Number Files
         resultfile = response['ResultFiles']['ResultFile']
-        resultfile = list(filter(lambda i: str(i['URL']).endswith('_pts_csv.csv'), resultfile))
+        if isinstance(resultfile, dict):
+            resultfile = [resultfile]
         for f in resultfile:
-            download_file(f['URL'], )
-
-
+            download_file(f['URL'], f['URL'].split('/')[-1], 1024)
 
     def get_meta(self, **kwargs):
         """
@@ -173,7 +186,7 @@ def url_https(url):
     return url.replace("http://", "https://")
 
 
-def query_params(self, params, key, def_value, short_hand=None):
+def query_params(params, key, def_value, short_hand=None):
     """
     updates params dict to use
     :param params:
@@ -244,6 +257,10 @@ def download_file(url, filename, chunk_size):
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
+    if str(filename).endswith('.zip'):
+        shutil.unpack_archive(filename)
+        if os.path.exists(filename):
+            os.remove(filename)
 
 
 def main():
