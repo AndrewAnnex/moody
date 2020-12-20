@@ -34,3 +34,5 @@ jobs:
         run: moody ctx_edr B01_009838_2108_XI_30N319W
       - name: Test moody hirise download edr
         run: moody hirise_edr ESP_016196_2745_BG\*
+      - name: List the files in the directory
+        run: ls
