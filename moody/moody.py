@@ -109,7 +109,7 @@ class ODE(object):
             "query": "molapedr",
             "results": rt,
             "output": "J",
-            "minlat": minlat,
+            "minlat": str(minlat),
             "maxlat": str(maxlat),
             "westernlon": str(minlon),
             "easternlon": str(maxlon),
@@ -125,7 +125,9 @@ class ODE(object):
         if isinstance(resultfile, dict):
             resultfile = [resultfile]
         for f in resultfile:
-            download_file(f['URL'], f['URL'].split('/')[-1], 1024)
+            fname = str(f['URL'].split('/')[-1])
+            fname = fname.replace('-', '__neg__')
+            download_file(f['URL'], fname, 1024)
 
     def get_meta(self, **kwargs):
         """
