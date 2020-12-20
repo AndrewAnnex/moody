@@ -3,7 +3,7 @@ import io
 
 # some influences here came from https://github.com/audreyr/cookiecutter/blob/master/setup.py
 
-version = '0.0.4'
+version = '0.1.0'
 
 with io.open('README.rst', 'r', encoding='utf-8') as readme_file:
     readme = readme_file.read()
@@ -38,6 +38,9 @@ setup(
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Scientific/Engineering :: GIS'
     ]
