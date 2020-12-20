@@ -1,0 +1,36 @@
+name: PR and Merge builds
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: "0 5 * * 0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Install moody
+        run: |
+          python setup.py install 
+      - name: Test moody pedr cmd
+        run:  moody pedr 138.053 -5.913 138.72 -4.315
+      - name: Test moody ctx meta
+        run: moody get_ctx_meta G02_019065_1749_XN_05S221W
+      - name: Test moody hirise meta
+        run: moody get_hirise_meta ESP_019065_1745
+      - name: Test moody ctx download edr
+        run: moody ctx_edr B01_009838_2108_XI_30N319W
+      - name: Test moody hirise download edr
+        run: moody hirise_edr ESP_016196_2745_BG\*
