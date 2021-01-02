@@ -1,3 +1,27 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) [2017-2021] [Andrew Annex]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import fire
 import requests
 import sys
@@ -58,7 +82,7 @@ class ODE(object):
 
         As a wild card is auto applied to the end of the provided pid
 
-        pid: product ID of the CTX EDR, partial IDs ok
+        pid: product ID of the HiRISE EDR, partial IDs ok
         chunk_size: Chunk size in bytes to use in download
         """
         productid = "{}*".format(pid)
@@ -70,6 +94,39 @@ class ODE(object):
                  "pt"        : "EDR",
                  "iid"       : "HiRISE",
                  "ihid"      : "MRO",
+                 "productid" : productid}
+
+        # Query the ODE
+        products = query_ode(self.ode_url, query)
+        # Validate query results with conditions for this particular query
+        if len(products) > 30:
+            print("Error: Too many products selected for in query, Make PID more specific")
+            sys.exit(1)
+        if not isinstance(products, list):
+            print("Error: Too few responses from server to be a full HiRISE EDR, ")
+        else:
+            # proceed to download
+            for product in products:
+                download_edr_img_files(product, self.https, chunk_size)
+                
+    def lrocnac_edr(self, pid, chunk_size=1024*1024):
+        """
+        Download a LROC NAC EDR set of .IMG files to the CWD
+
+        As a wild card is auto applied to the end of the provided pid
+
+        pid: product ID of the LROC EDR, partial IDs ok
+        chunk_size: Chunk size in bytes to use in download
+        """
+        productid = "{}*".format(pid)
+
+        query = {"target"    : "moon",
+                 "query"     : "product",
+                 "results"   : "f",
+                 "output"    : "j",
+                 "pt"        : "EDRNAC",
+                 "iid"       : "LROC",
+                 "ihid"      : "LRO",
                  "productid" : productid}
 
         # Query the ODE
@@ -242,6 +299,10 @@ def query_ode(ode_url, query):
 def download_edr_img_files(product, https, chunk_size):
     edr_products = product['Product_files']['Product_file']
     edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
+    # fix lroc urls
+    for x in edr_files:
+        if 'www.lroc.asu.edu' in x['URL']:
+            x['URL'] = x['URL'].replace('www.lroc.asu.edu', 'pds.lroc.asu.edu')
     for edr in edr_files:
         url   = edr['URL']
         if https:
