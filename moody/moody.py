@@ -313,11 +313,13 @@ def download_edr_img_files(product, https, chunk_size):
 
 
 def download_file(url, filename, chunk_size):
-    with closing(requests.get(url, stream=True)) as r:
-        with open(filename, "wb") as output:
+    with open(filename, "wb", chunk_size) as output:
+        with closing(requests.get(url, stream=True)) as r:
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
+                    output.flush()
+        output.flush()
     if str(filename).endswith('.zip'):
         shutil.unpack_archive(filename)
         if os.path.exists(filename):
