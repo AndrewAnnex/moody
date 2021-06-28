@@ -319,6 +319,7 @@ def download_file(url, filename, chunk_size):
                 if chunk:
                     output.write(chunk)
                     output.flush()
+            r.close()
         output.flush()
     if str(filename).endswith('.zip'):
         shutil.unpack_archive(filename)
