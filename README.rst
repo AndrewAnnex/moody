@@ -9,8 +9,7 @@ The name 'moody' came from thinking about Mars, the ODE, and Python at the same 
 
 Installation
 ------------
-Eventually this will be in pypi, but for now just clone and run ``python setup.py install``.
-Moody will show up in your path as an executable.
+run `pip install moody`
 
 Chat
 ----
