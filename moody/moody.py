@@ -30,6 +30,9 @@ from contextlib import closing
 from typing import Optional
 import shutil
 import os
+from multiprocessing import Pool, cpu_count
+from functools import partial
+from itertools import chain
 
 
 class ODE(object):
@@ -106,8 +109,7 @@ class ODE(object):
             print("Error: Too few responses from server to be a full HiRISE EDR, ")
         else:
             # proceed to download
-            for product in products:
-                download_edr_img_files(product, self.https, chunk_size)
+            download_edr_img_files_par(products, self.https, chunk_size)
                 
     def lrocnac_edr(self, pid, chunk_size=1024*1024):
         """
@@ -139,8 +141,7 @@ class ODE(object):
             print("Error: Too few responses from server to be a full HiRISE EDR, ")
         else:
             # proceed to download
-            for product in products:
-                download_edr_img_files(product, self.https, chunk_size)
+            download_edr_img_files_par(products, self.https, chunk_size)
 
     def pedr(self, minlon: float, minlat: float, maxlon: float, maxlat: float, wkt_footprint: Optional[str] = None, ext: str = 'csv', **kwargs):
         """
@@ -296,6 +297,20 @@ def query_ode(ode_url, query):
             sys.exit(1)
 
 
+def download_edr_img_files_par(products, https: bool = True, chunk_size: int = 1024*1024):
+    edr_products = list(chain.from_iterable([_['Product_files']['Product_file'] for _ in products]))
+    edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
+    # fix lroc urls
+    for x in edr_files:
+        if 'www.lroc.asu.edu' in x['URL']:
+            x['URL'] = x['URL'].replace('www.lroc.asu.edu', 'pds.lroc.asu.edu')
+    urls = [_['URL'] for _ in edr_files]
+    filenames = [_['FileName'] for _ in edr_files]
+    with Pool(cpu_count()) as pool:
+        get = partial(download_file, chunk_size=chunk_size)
+        pool.starmap(get, list(zip(urls, filenames)))
+
+
 def download_edr_img_files(product, https, chunk_size):
     edr_products = product['Product_files']['Product_file']
     edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
@@ -312,7 +327,7 @@ def download_edr_img_files(product, https, chunk_size):
         download_file(url, filename, chunk_size)
 
 
-def download_file(url, filename, chunk_size):
+def download_file(url, filename, chunk_size: int = 1024*1024):
     with closing(requests.get(url, stream=True)) as r:
         with open(filename, "wb") as output:
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
