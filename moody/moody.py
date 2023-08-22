@@ -72,7 +72,7 @@ class ODE(object):
             print("Error: Too many products selected for in query, Make PID more specific")
             sys.exit(1)
         else:
-            download_edr_img_files(product, self.headers, https=self.https, chunk_size=chunk_size)
+            download_edr_img_files(product, https=self.https, chunk_size=chunk_size)
 
     def hirise_edr(self, pid, chunk_size=1024*1024):
         """
@@ -109,7 +109,7 @@ class ODE(object):
             print("Error: Too few responses from server to be a full HiRISE EDR, ")
         else:
             # proceed to download
-            download_edr_img_files_par(products, self.headers, self.https, chunk_size)
+            download_edr_img_files_par(products, self.https, chunk_size)
                 
     def lrocnac_edr(self, pid, chunk_size=1024*1024):
         """
@@ -141,7 +141,7 @@ class ODE(object):
             print("Error: Too few responses from server to be a full HiRISE EDR, ")
         else:
             # proceed to download
-            download_edr_img_files_par(products, self.headers, self.https, chunk_size)
+            download_edr_img_files_par(products, self.https, chunk_size)
 
     def pedr(self, minlon: float, minlat: float, maxlon: float, maxlat: float, wkt_footprint: Optional[str] = None, ext: str = 'csv', **kwargs):
         """
