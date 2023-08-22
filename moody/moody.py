@@ -345,6 +345,10 @@ def download_file(url, filename, chunk_size, headers):
                     output.write(chunk)
                     output.flush()
             r.close()
+            print(r.request)
+            print(r.request.url)
+            print(r.request.headers)
+            print(r.request.body)
         output.flush()
     if str(filename).endswith('.zip'):
         shutil.unpack_archive(filename)
