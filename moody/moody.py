@@ -279,7 +279,7 @@ def query_params(params, key, def_value, short_hand=None):
     return params
 
 
-def query_gds(gds_url, query, headers, headers):
+def query_gds(gds_url, query, headers):
     with closing(requests.get(gds_url, params=query, headers=headers)) as r:
         if r.ok:
             response = r.json()
