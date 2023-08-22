@@ -82,7 +82,7 @@ class ODE(object):
             print("Error: Too many products selected for in query, Make PID more specific")
             sys.exit(1)
         else:
-            download_edr_img_files(product, self.headers, self.https, chunk_size)
+            download_edr_img_files(product, self.headers, self.https, chunk_size=chunk_size)
 
     def hirise_edr(self, pid, chunk_size=1024*1024):
         """
@@ -321,7 +321,7 @@ def download_edr_img_files_par(products, headers, https: bool = True, chunk_size
         pool.starmap(get, list(zip(urls, filenames)))
 
 
-def download_edr_img_files(product, https, chunk_size, headers):
+def download_edr_img_files(product, headers, https: bool = True, chunk_size: int = 1024*1024):
     edr_products = product['Product_files']['Product_file']
     edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
     # fix lroc urls
