@@ -19,7 +19,7 @@ setup(
     author='Andrew Annex',
     author_email='annex@jhu.edu',
     url='https://github.com/andrewannex/moody',
-    download_url='https://github.com/AndrewAnnex/moody/archive/0.2.2.tar.gz',
+    download_url=f'https://github.com/AndrewAnnex/moody/archive/{version}.tar.gz',
     install_requires=['requests', 'fire', 'tqdm'],
     entry_points={
         'console_scripts': [
