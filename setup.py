@@ -3,7 +3,7 @@ import io
 
 # some influences here came from https://github.com/audreyr/cookiecutter/blob/master/setup.py
 
-version = '0.2.2'
+version = '0.2.3'
 
 with io.open('README.rst', 'r', encoding='utf-8') as readme_file:
     readme = readme_file.read()
