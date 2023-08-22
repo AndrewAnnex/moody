@@ -334,12 +334,14 @@ def download_edr_img_files(product, headers, https: bool = True, chunk_size: int
             url = url_https(url)
         filename = edr['FileName']
         # make download request
+        print(url)
         download_file(url, filename, chunk_size, headers)
 
 
 def download_file(url, filename, chunk_size, headers):
     with open(filename, "wb", chunk_size) as output:
         with closing(requests.get(url, stream=True, headers=headers)) as r:
+            print(r.status_code)
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
