@@ -37,4 +37,6 @@ jobs:
       - name: Test moody LRO NAC download edr
         run: moody lrocnac_edr M10431887
       - name: List the files in the directory
-        run: ls
+        run: |
+          ls
+          head -n 20 ./*.IMG
