@@ -339,6 +339,7 @@ def download_edr_img_files(product, headers, https: bool = True, chunk_size: int
 
 
 def download_file(url, filename, chunk_size, headers):
+    url = url.replace('https://pds-imaging.jpl.nasa.gov/data/mro/mars_reconnaissance_orbiter/ctx/', 'https://asc-pds-mars-reconnaissance-orbiter.s3.us-west-2.amazonaws.com/CTX/')
     with open(filename, "wb", chunk_size) as output:
         with closing(requests.get(url, stream=True, headers=headers)) as r:
             print(r.status_code)
