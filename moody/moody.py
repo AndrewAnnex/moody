@@ -72,7 +72,7 @@ class ODE(object):
             print("Error: Too many products selected for in query, Make PID more specific")
             sys.exit(1)
         else:
-            download_edr_img_files(product, self.https, chunk_size)
+            download_edr_img_files(product, https=self.https, chunk_size=chunk_size)
 
     def hirise_edr(self, pid, chunk_size=1024*1024):
         """
@@ -126,7 +126,7 @@ class ODE(object):
                  "query"     : "product",
                  "results"   : "f",
                  "output"    : "j",
-                 "pt"        : "EDRNAC",
+                 "pt"        : "EDRNAC4",
                  "iid"       : "LROC",
                  "ihid"      : "LRO",
                  "productid" : productid}
@@ -311,7 +311,7 @@ def download_edr_img_files_par(products, https: bool = True, chunk_size: int = 1
         pool.starmap(get, list(zip(urls, filenames)))
 
 
-def download_edr_img_files(product, https, chunk_size):
+def download_edr_img_files(product, https: bool = True, chunk_size: int = 1024*1024):
     edr_products = product['Product_files']['Product_file']
     edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
     # fix lroc urls
@@ -328,8 +328,9 @@ def download_edr_img_files(product, https, chunk_size):
 
 
 def download_file(url, filename, chunk_size):
+    url = url.replace('pds-imaging.jpl.nasa.gov/data/', 'planetarydata.jpl.nasa.gov/img/data/')
     with open(filename, "wb", chunk_size) as output:
-        with closing(requests.get(url, stream=True)) as r:
+        with closing(requests.get(url, stream=True, allow_redirects=True)) as r:
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
