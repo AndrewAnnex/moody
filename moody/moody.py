@@ -334,7 +334,6 @@ def download_edr_img_files(product, headers, https: bool = True, chunk_size: int
             url = url_https(url)
         filename = edr['FileName']
         # make download request
-        print(url)
         download_file(url, filename, chunk_size, headers)
 
 
@@ -342,16 +341,11 @@ def download_file(url, filename, chunk_size, headers):
     url = url.replace('pds-imaging.jpl.nasa.gov/data/', 'planetarydata.jpl.nasa.gov/img/data/')
     with open(filename, "wb", chunk_size) as output:
         with closing(requests.get(url, stream=True, allow_redirects=True, headers=headers)) as r:
-            print(r.status_code)
             for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
                 if chunk:
                     output.write(chunk)
                     output.flush()
             r.close()
-            print(r.request)
-            print(r.request.url)
-            print(r.request.headers)
-            print(r.request.body)
         output.flush()
     if str(filename).endswith('.zip'):
         shutil.unpack_archive(filename)
