@@ -82,7 +82,7 @@ class ODE(object):
             print("Error: Too many products selected for in query, Make PID more specific")
             sys.exit(1)
         else:
-            download_edr_img_files(product, self.https, chunk_size)
+            download_edr_img_files(product, self.headers, self.https, chunk_size)
 
     def hirise_edr(self, pid, chunk_size=1024*1024):
         """
