@@ -136,7 +136,7 @@ class ODE(object):
                  "query"     : "product",
                  "results"   : "f",
                  "output"    : "j",
-                 "pt"        : "EDRNAC",
+                 "pt"        : "EDRNAC4",
                  "iid"       : "LROC",
                  "ihid"      : "LRO",
                  "productid" : productid}
