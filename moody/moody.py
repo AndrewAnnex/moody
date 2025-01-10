@@ -1,7 +1,7 @@
 """
 The MIT License (MIT)
 
-Copyright (c) [2017-2021] [Andrew Annex]
+Copyright (c) [2017-2025] [Andrew Annex]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,13 +33,14 @@ import os
 from multiprocessing import Pool, cpu_count
 from functools import partial
 from itertools import chain
+from urllib.parse import unquote
 
 
 class ODE(object):
-    """ class to hold ode downloading commands """
+    """class to hold ode downloading commands"""
 
     def __init__(self, https=True, debug=False):
-        self.https   = https
+        self.https = https
         if https:
             self.ode_url = "https://oderest.rsl.wustl.edu/live2"
             self.gds_url = "https://oderest.rsl.wustl.edu/livegds"
@@ -47,7 +48,7 @@ class ODE(object):
             self.ode_url = "http://oderest.rsl.wustl.edu/live2"
             self.gds_url = "http://oderest.rsl.wustl.edu/livegds"
 
-    def ctx_edr(self, pid, chunk_size=1024*1024):
+    def ctx_edr(self, pid, chunk_size=1024 * 1024):
         """
         Download a CTX EDR .IMG file to the CWD.
 
@@ -56,25 +57,29 @@ class ODE(object):
         """
         productid = "{}*".format(pid)
 
-        query = {"target"    : "mars",
-                 "query"     : "product",
-                 "results"   : "f",
-                 "output"    : "j",
-                 "pt"        : "EDR",
-                 "iid"       : "CTX",
-                 "ihid"      : "MRO",
-                 "productid" : productid}
+        query = {
+            "target": "mars",
+            "query": "product",
+            "results": "f",
+            "output": "j",
+            "pt": "EDR",
+            "iid": "CTX",
+            "ihid": "MRO",
+            "productid": productid,
+        }
 
         # Query the ODE
         product = query_ode(self.ode_url, query)
         # Validate query results with conditions for this particular query
         if isinstance(product, list):
-            print("Error: Too many products selected for in query, Make PID more specific")
+            print(
+                "Error: Too many products selected for in query, Make PID more specific"
+            )
             sys.exit(1)
         else:
             download_edr_img_files(product, https=self.https, chunk_size=chunk_size)
 
-    def hirise_edr(self, pid, chunk_size=1024*1024):
+    def hirise_edr(self, pid, chunk_size=1024 * 1024):
         """
         Download a HiRISE EDR set of .IMG files to the CWD
 
@@ -90,28 +95,32 @@ class ODE(object):
         """
         productid = "{}*".format(pid)
 
-        query = {"target"    : "mars",
-                 "query"     : "product",
-                 "results"   : "f",
-                 "output"    : "j",
-                 "pt"        : "EDR",
-                 "iid"       : "HiRISE",
-                 "ihid"      : "MRO",
-                 "productid" : productid}
+        query = {
+            "target": "mars",
+            "query": "product",
+            "results": "f",
+            "output": "j",
+            "pt": "EDR",
+            "iid": "HiRISE",
+            "ihid": "MRO",
+            "productid": productid,
+        }
 
         # Query the ODE
         products = query_ode(self.ode_url, query)
         # Validate query results with conditions for this particular query
         if len(products) > 30:
-            print("Error: Too many products selected for in query, Make PID more specific")
+            print(
+                "Error: Too many products selected for in query, Make PID more specific"
+            )
             sys.exit(1)
         if not isinstance(products, list):
             print("Error: Too few responses from server to be a full HiRISE EDR, ")
         else:
             # proceed to download
             download_edr_img_files_par(products, self.https, chunk_size)
-                
-    def lrocnac_edr(self, pid, chunk_size=1024*1024):
+
+    def lrocnac_edr(self, pid, chunk_size=1024 * 1024):
         """
         Download a LROC NAC EDR set of .IMG files to the CWD
 
@@ -122,28 +131,80 @@ class ODE(object):
         """
         productid = "{}*".format(pid)
 
-        query = {"target"    : "moon",
-                 "query"     : "product",
-                 "results"   : "f",
-                 "output"    : "j",
-                 "pt"        : "EDRNAC4",
-                 "iid"       : "LROC",
-                 "ihid"      : "LRO",
-                 "productid" : productid}
+        query = {
+            "target": "moon",
+            "query": "product",
+            "results": "f",
+            "output": "j",
+            "pt": "EDRNAC4",
+            "iid": "LROC",
+            "ihid": "LRO",
+            "productid": productid,
+        }
 
         # Query the ODE
         products = query_ode(self.ode_url, query)
         # Validate query results with conditions for this particular query
         if len(products) > 30:
-            print("Error: Too many products selected for in query, Make PID more specific")
+            print(
+                "Error: Too many products selected for in query, Make PID more specific"
+            )
             sys.exit(1)
         if not isinstance(products, list):
-            print("Error: Too few responses from server to be a full HiRISE EDR, ")
+            print("Error: Too few responses from server to be a full LROC EDR, ")
         else:
             # proceed to download
             download_edr_img_files_par(products, self.https, chunk_size)
 
-    def pedr(self, minlon: float, minlat: float, maxlon: float, maxlat: float, wkt_footprint: Optional[str] = None, ext: str = 'csv', **kwargs):
+    def footprints_lrocnac(
+        self,
+        minlon: float,
+        minlat: float,
+        maxlon: float,
+        maxlat: float,
+        wkt_footprint: Optional[str] = None,
+        chunk_size: int = 1024 * 1024,
+        **kwargs,
+    ):
+        if minlon < 0 or maxlon < 0:
+            # convert -180 to 180 to 0 to 360
+            minlon += 180.0
+            maxlon += 180.0
+        assert 0 <= minlon <= 360
+        assert 0 <= maxlon <= 360
+        assert minlon < maxlon and minlat < maxlat
+
+        # could use coveragekml and attempt direct ogr2ogr
+        query = {
+            "target": "moon",
+            "query": "coveragezip",
+            "results": "op",
+            "output": "J",
+            "pt": "EDRNAC4",
+            "iid": "LROC",
+            "ihid": "LRO",
+            "minlat": str(minlat),
+            "maxlat": str(maxlat),
+            "westernlon": str(minlon),
+            "easternlon": str(maxlon),
+            "zipclean": "t",
+            "loc": "f",
+        }
+        if wkt_footprint:
+            query["footprint"] = f"{wkt_footprint}"
+        # query and download zip/kml
+        download_file(self.ode_url, chunk_size=chunk_size, params=query, **kwargs)
+
+    def pedr(
+        self,
+        minlon: float,
+        minlat: float,
+        maxlon: float,
+        maxlat: float,
+        wkt_footprint: Optional[str] = None,
+        ext: str = "csv",
+        **kwargs,
+    ):
         """
         Get the mola pedr csv/shp file for the query bounds
         :param ext:
@@ -162,7 +223,7 @@ class ODE(object):
         assert 0 <= maxlon <= 360
         assert minlon < maxlon and minlat < maxlat
         # default is csv
-        rt = 's' if ext == 'shp' else 'v'
+        rt = "s" if ext == "shp" else "v"
         query = {
             "query": "molapedr",
             "results": rt,
@@ -171,21 +232,21 @@ class ODE(object):
             "maxlat": str(maxlat),
             "westernlon": str(minlon),
             "easternlon": str(maxlon),
-            "zipclean": 't',
-            **kwargs
+            "zipclean": "t",
+            **kwargs,
         }
         if wkt_footprint:
-            query['footprint'] = f'{wkt_footprint}'
+            query["footprint"] = f"{wkt_footprint}"
         # Query the ODEq
         response = query_gds(self.gds_url, query)
         # get the ResultFile, it seems ResultFile has the same number of contents as Number Files
-        resultfile = response['ResultFiles']['ResultFile']
+        resultfile = response["ResultFiles"]["ResultFile"]
         if isinstance(resultfile, dict):
             resultfile = [resultfile]
         for f in resultfile:
-            fname = str(f['URL'].split('/')[-1])
-            fname = fname.replace('-', '__neg__')
-            download_file(f['URL'], fname, 1024)
+            fname = str(f["URL"].split("/")[-1])
+            fname = fname.replace("-", "__neg__")
+            download_file(f["URL"], fname, 1024)
 
     def get_meta(self, **kwargs):
         """
@@ -195,10 +256,10 @@ class ODE(object):
         """
         query = kwargs
         # filters
-        query = query_params(query, 'productid', None, short_hand='pid')
-        query = query_params(query, 'query', 'product')
-        query = query_params(query, 'results', 'm')
-        query = query_params(query, 'output', 'j')
+        query = query_params(query, "productid", None, short_hand="pid")
+        query = query_params(query, "query", "product")
+        query = query_params(query, "results", "m")
+        query = query_params(query, "output", "j")
         return query_ode(self.ode_url, query=query)
 
     def get_meta_by_key(self, key, **kwargs):
@@ -208,14 +269,16 @@ class ODE(object):
     def get_ctx_meta(self, pid):
         productid = "{}*".format(pid)
 
-        query = {"target"   : "mars",
-                 "query"    : "product",
-                 "results"  : "m",
-                 "output"   : "j",
-                 "pt"       : "EDR",
-                 "iid"      : "CTX",
-                 "ihid"     : "MRO",
-                 "productid": productid}
+        query = {
+            "target": "mars",
+            "query": "product",
+            "results": "m",
+            "output": "j",
+            "pt": "EDR",
+            "iid": "CTX",
+            "ihid": "MRO",
+            "productid": productid,
+        }
 
         return query_ode(self.ode_url, query=query)
 
@@ -226,20 +289,37 @@ class ODE(object):
     def get_hirise_meta(self, pid):
         productid = "{}*".format(pid)
 
-        query = {"target"   : "mars",
-                 "query"    : "product",
-                 "results"  : "m",
-                 "output"   : "j",
-                 "pt"       : "RDRV11",
-                 "iid"      : "HiRISE",
-                 "ihid"     : "MRO",
-                 "productid": productid}
+        query = {
+            "target": "mars",
+            "query": "product",
+            "results": "m",
+            "output": "j",
+            "pt": "RDRV11",
+            "iid": "HiRISE",
+            "ihid": "MRO",
+            "productid": productid,
+        }
 
         return query_ode(self.ode_url, query=query)
 
     def get_hirise_meta_by_key(self, pid, key):
         res = self.get_hirise_meta(pid)
         return res[key]
+
+
+def get_filename(response: requests.Response) -> str:
+    content_disposition = response.headers.get("Content-Disposition")
+    if content_disposition:
+        # Extract filename using Content-Disposition parsing
+        for part in content_disposition.split(";"):
+            if "filename=" in part:
+                file_name = part.split("=")[1].strip().strip('"')
+                file_name = unquote(file_name)  # Decode URL-encoded characters
+                break
+    else:
+        # Fallback to extracting filename from the URL if Content-Disposition is not present
+        file_name = response.url.split("/")[-1]
+    return file_name
 
 
 def url_https(url):
@@ -273,79 +353,106 @@ def query_gds(gds_url, query):
     with closing(requests.get(gds_url, params=query)) as r:
         if r.ok:
             response = r.json()
-            products_check = response['GDSResults']
-            if products_check['Status'] != 'Success':
-                raise RuntimeError(f"Error, some issue with the query: {r.url}", products_check)
+            products_check = response["GDSResults"]
+            if products_check["Status"] != "Success":
+                raise RuntimeError(
+                    f"Error, some issue with the query: {r.url}", products_check
+                )
             else:
                 return products_check
         else:
-            raise RuntimeError("Error with query at url: {} with code: {}".format(gds_url, r.status_code))
+            raise RuntimeError(
+                "Error with query at url: {} with code: {}".format(
+                    gds_url, r.status_code
+                )
+            )
 
 
 def query_ode(ode_url, query):
     with closing(requests.get(ode_url, params=query)) as r:
         if r.ok:
             response = r.json()
-            products_check = response['ODEResults']['Products']
+            products_check = response["ODEResults"]["Products"]
             if products_check == "No Products Found":
                 print("Error, PID not found by ODE")
                 sys.exit(1)
             else:
-                return products_check['Product']
+                return products_check["Product"]
         else:
-            print("Error with query at url: {} with code: {}".format(ode_url, r.status_code))
+            print(
+                "Error with query at url: {} with code: {}".format(
+                    ode_url, r.status_code
+                )
+            )
             sys.exit(1)
 
 
-def download_edr_img_files_par(products, https: bool = True, chunk_size: int = 1024*1024):
-    edr_products = list(chain.from_iterable([_['Product_files']['Product_file'] for _ in products]))
-    edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
+def download_edr_img_files_par(
+    products, https: bool = True, chunk_size: int = 1024 * 1024
+):
+    edr_products = list(
+        chain.from_iterable([_["Product_files"]["Product_file"] for _ in products])
+    )
+    edr_files = [x for x in edr_products if x["URL"].endswith(".IMG")]
     # fix lroc urls
     for x in edr_files:
-        if 'www.lroc.asu.edu' in x['URL']:
-            x['URL'] = x['URL'].replace('www.lroc.asu.edu', 'pds.lroc.asu.edu')
-    urls = [_['URL'] for _ in edr_files]
-    filenames = [_['FileName'] for _ in edr_files]
+        if "www.lroc.asu.edu" in x["URL"]:
+            x["URL"] = x["URL"].replace("www.lroc.asu.edu", "pds.lroc.asu.edu")
+    urls = [_["URL"] for _ in edr_files]
+    filenames = [_["FileName"] for _ in edr_files]
     with Pool(cpu_count()) as pool:
         get = partial(download_file, chunk_size=chunk_size)
         pool.starmap(get, list(zip(urls, filenames)))
 
 
-def download_edr_img_files(product, https: bool = True, chunk_size: int = 1024*1024):
-    edr_products = product['Product_files']['Product_file']
-    edr_files = [x for x in edr_products if x['URL'].endswith(".IMG")]
+def download_edr_img_files(product, https: bool = True, chunk_size: int = 1024 * 1024):
+    edr_products = product["Product_files"]["Product_file"]
+    edr_files = [x for x in edr_products if x["URL"].endswith(".IMG")]
     # fix lroc urls
     for x in edr_files:
-        if 'www.lroc.asu.edu' in x['URL']:
-            x['URL'] = x['URL'].replace('www.lroc.asu.edu', 'pds.lroc.asu.edu')
+        if "www.lroc.asu.edu" in x["URL"]:
+            x["URL"] = x["URL"].replace("www.lroc.asu.edu", "pds.lroc.asu.edu")
     for edr in edr_files:
-        url   = edr['URL']
+        url = edr["URL"]
         if https:
             url = url_https(url)
-        filename = edr['FileName']
+        filename = edr["FileName"]
         # make download request
         download_file(url, filename, chunk_size)
 
 
-def download_file(url, filename, chunk_size):
-    url = url.replace('pds-imaging.jpl.nasa.gov/data/', 'planetarydata.jpl.nasa.gov/img/data/')
-    with open(filename, "wb", chunk_size) as output:
-        with closing(requests.get(url, stream=True, allow_redirects=True)) as r:
-            for chunk in tqdm(r.iter_content(chunk_size), desc=f'Downloading {filename}'):
-                if chunk:
-                    output.write(chunk)
-                    output.flush()
-            r.close()
-        output.flush()
-    if str(filename).endswith('.zip'):
+def unzip(filename):
+    if str(filename).endswith(".zip"):
         shutil.unpack_archive(filename)
         if os.path.exists(filename):
             os.remove(filename)
+
+
+def download_file(url, filename=None, chunk_size=1024, params=None, do_unzip=True):
+    url = url.replace(
+        "pds-imaging.jpl.nasa.gov/data/", "planetarydata.jpl.nasa.gov/img/data/"
+    )
+    with closing(
+        requests.get(url, stream=True, allow_redirects=True, params=params)
+    ) as r:
+        if not filename:
+            filename = get_filename(r)
+        with open(filename, "wb", chunk_size) as output:
+            for chunk in tqdm(
+                r.iter_content(chunk_size), desc=f"Downloading {filename}"
+            ):
+                if chunk:
+                    output.write(chunk)
+                    output.flush()
+            output.flush()
+        r.close()
+    if do_unzip:
+        unzip(filename)
 
 
 def main():
     fire.Fire(ODE)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
