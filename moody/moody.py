@@ -166,13 +166,22 @@ class ODE(object):
         chunk_size: int = 1024 * 1024,
         **kwargs,
     ):
+        proj = 'c0'
         if minlon < 0 or maxlon < 0:
             # convert -180 to 180 to 0 to 360
             minlon += 180.0
             maxlon += 180.0
+            print(f'\t minlon updated to: {minlon}')
+            print(f'\t maxlon updated to: {maxlon}')
         assert 0 <= minlon <= 360
         assert 0 <= maxlon <= 360
         assert minlon < maxlon and minlat < maxlat
+
+        # todo this doesn't do anything really
+        if maxlon < -80.0:
+            proj = 'sp'
+        if minlon > 80.0:
+            proj = 'np'
 
         # could use coveragekml and attempt direct ogr2ogr
         query = {
@@ -189,6 +198,7 @@ class ODE(object):
             "easternlon": str(maxlon),
             "zipclean": "t",
             "loc": "f",
+            "proj": proj
         }
         if wkt_footprint:
             query["footprint"] = f"{wkt_footprint}"
