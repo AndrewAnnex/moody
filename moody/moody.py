@@ -150,11 +150,9 @@ class ODE(object):
                 "Error: Too many products selected for in query, Make PID more specific"
             )
             sys.exit(1)
-        if not isinstance(products, list):
-            print("Error: Too few responses from server to be a full LROC EDR, ")
         else:
             # proceed to download
-            download_edr_img_files_par(products, self.https, chunk_size)
+            download_edr_img_files_par(products if isinstance(products, list) else [products], self.https, chunk_size)
 
     def footprints_lrocnac(
         self,
