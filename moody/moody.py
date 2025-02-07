@@ -129,7 +129,7 @@ class ODE(object):
         pid: product ID of the LROC EDR, partial IDs ok
         chunk_size: Chunk size in bytes to use in download
         """
-        productid = "{}*".format(pid)
+        productid = "nac.{}*".format(pid)
 
         query = {
             "target": "moon",
@@ -273,6 +273,27 @@ class ODE(object):
     def get_meta_by_key(self, key, **kwargs):
         res = self.get_meta(**kwargs)
         return res[key]
+    
+    def get_lrocnac_meta(self, pid):
+        productid = "nac.{}*".format(pid)
+
+        query = {
+            "target": "moon",
+            "query": "product",
+            "results": "m",
+            "output": "j",
+            "pt": "EDRNAC4",
+            "iid": "LROC",
+            "ihid": "LRO",
+            "productid": productid,
+        }
+
+        return query_ode(self.ode_url, query=query)
+
+    def get_lrocnac_meta_by_key(self, pid, key):
+        res = self.get_lrocnac_meta(pid)
+        return res[key]
+
 
     def get_ctx_meta(self, pid):
         productid = "{}*".format(pid)
